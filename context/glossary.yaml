@@ -1,0 +1,26 @@
+schema_version: 1
+terms:
+  - id: GL-0001
+    term: Policy
+    definition: An insurance agreement identifying the insured, coverage, and premium.
+  - id: GL-0002
+    term: Claim
+    definition: A request for payment under a policy after a reported loss.
+  - id: GL-0003
+    term: Coverage
+    definition: The insured risks and maximum payable amount under a policy.
+  - id: GL-0004
+    term: Premium
+    definition: The amount charged for insurance coverage.
+  - id: GL-0005
+    term: Payout
+    definition: A payment issued to settle all or part of a claim.
+  - id: GL-0006
+    term: Deductible
+    definition: The portion of an otherwise covered loss borne by the insured.
+  - id: GL-0007
+    term: Fraud score
+    definition: A synthetic risk indicator from 0 to 100 used for claim review.
+  - id: GL-0008
+    term: Claim status
+    definition: The current processing state of a claim owned by the claims service.

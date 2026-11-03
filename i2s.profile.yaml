@@ -1,0 +1,29 @@
+schema_version: 1
+organization: shield-insurance
+context_repository: shield-context
+judge:
+  enabled: false
+  model: null
+  rubric:
+    - requirement_traceability
+    - dependency_evidence
+    - contract_consistency
+    - regulated_data_handling
+approved_models: []
+tool_register:
+  - id: repository-read
+    purpose: Read source, contracts, and context in the seven Shield repositories.
+    approval: approved
+    access: read-only
+  - id: repository-search
+    purpose: Trace callers, dependencies, and ownership in Shield source.
+    approval: approved
+    access: read-only
+  - id: local-validation
+    purpose: Run checked-in validators against synthetic local fixtures.
+    approval: approved
+    access: local-execution
+  - id: publish-spec-pr
+    purpose: Propose coordinated specification changes through pull requests.
+    approval: requires-human-approval
+    access: repository-write

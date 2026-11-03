@@ -1,0 +1,62 @@
+schema_version: 1
+components:
+  - id: CM-POLICY
+    application: policy-admin
+    repo: shield-policy-service
+    paths: [src/policy/, db/migrations/]
+    contracts: [contracts/policy-api.yaml, contracts/events/policy-issued.json]
+    data_classes: [pii]
+    regions: [US]
+    depends_on: [CM-UW-RULES]
+    owns: [GL-0001, GL-0003, GL-0004, GL-0006]
+    owner_team: Policy platform
+  - id: CM-UW-RULES
+    application: policy-admin
+    repo: shield-underwriting-rules
+    paths: [src/underwriting/]
+    contracts: [contracts/underwriting-api.yaml]
+    data_classes: [pii]
+    regions: [US]
+    depends_on: []
+    owns: []
+    owner_team: Policy platform
+  - id: CM-CLAIMS
+    application: claims
+    repo: shield-claims-service
+    paths: [src/claims/]
+    contracts: [contracts/claims-api.yaml]
+    data_classes: [pii, financial]
+    regions: [US]
+    depends_on: [CM-POLICY, CM-FRAUD, CM-BILLING]
+    owns: [GL-0002, GL-0008]
+    owner_team: Claims platform
+  - id: CM-FRAUD
+    application: claims
+    repo: shield-fraud-scoring
+    paths: [src/fraud/]
+    contracts: [contracts/fraud-api.yaml]
+    data_classes: [pii]
+    regions: [US]
+    depends_on: []
+    owns: [GL-0007]
+    owner_team: Claims platform
+  - id: CM-BILLING
+    application: billing-customer
+    repo: shield-billing-service
+    paths: [src/billing/]
+    contracts: [contracts/billing-api.yaml]
+    data_classes: [pii, financial]
+    regions: [US]
+    depends_on: [CM-POLICY]
+    owns: [GL-0005]
+    owner_team: Billing platform
+  - id: CM-PORTAL
+    application: billing-customer
+    repo: shield-customer-portal
+    paths: [src/portal/]
+    contracts: [contracts/portal-api.yaml]
+    data_classes: [pii, financial]
+    regions: [US]
+    depends_on: [CM-POLICY, CM-CLAIMS, CM-BILLING]
+    owns: []
+    owner_team: Customer experience
