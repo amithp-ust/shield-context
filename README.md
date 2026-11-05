@@ -95,5 +95,31 @@ sharing. No service code or specification package is generated.
   after client review; do not treat this inventory as an approval.
 - Bootstrap client workflows only with an explicitly reviewed accelerator
   `--accelerator-ref` set to a full 40-character commit SHA, not a branch or tag.
+  Wait for the reviewed accelerator release commit; no client workflow is
+  installed by these PRs.
+- Before enabling client workflows, set repository variables
+  `I2S_CONTEXT_REPOSITORY` and `I2S_CONTEXT_REF` (the approved context revision),
+  and configure secrets `I2S_ACCELERATOR_TOKEN` and `I2S_CONTEXT_TOKEN` with
+  least-privilege repository access. Never put token values in this profile,
+  documentation, or specifications.
+- Use `gate status --require-build-ready` for production readiness: it rejects
+  mock judging, absent application source, unassessed dependencies, and deferred
+  regions. Passing the synthetic fixture or metadata validation is not a
+  production-readiness approval.
+- Supply current `--context` and profile when using `handoff --execute`.
+  Context/profile fingerprints bind gate evidence to the reviewed inputs;
+  rerun the gate when either changes rather than reusing stale evidence.
 - Have repository administrators configure protected branches and required
   checks separately. These changes do not modify branch protection or merge PRs.
+
+## Coordinated pull requests
+
+- [Context compatibility](https://github.com/amithp-ust/shield-context/pull/1)
+- [Canonical policy view contract](https://github.com/amithp-ust/shield-policy-service/pull/1)
+- [Fraud consumer contract link](https://github.com/amithp-ust/shield-fraud-scoring/pull/1)
+
+Review the provider and consumer contracts together before the context map change.
+Canonical links on `main` become available only after the corresponding PRs merge;
+the six-sibling fixture resolves the proposed contracts locally without network
+access. Context CI validates metadata and context regression tests, not the
+six-repository fixture; the application repositories currently have no CI checks.
