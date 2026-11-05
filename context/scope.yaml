@@ -9,17 +9,29 @@ data_classes:
   - id: financial
     description: Premium schedules, requested claim amounts, and payouts.
     handling: Integer USD cents; no payment credentials or account numbers.
-regulation_register:
-  - id: REG-GLBA
+regulated_data_classes: [pii, financial]
+regulations:
+  - id: REG-US-01
     name: Gramm-Leach-Bliley Act
-    regions: [US]
+    region: US
     data_classes: [pii, financial]
+    source: "Prior context/scope.yaml REG-GLBA; candidate-requires-compliance-review"
+    status: unverified
+    owner: Compliance (review pending)
+  - id: REG-US-02
+    name: Applicable state insurance claims and privacy requirements
+    region: US
+    data_classes: [pii, financial]
+    source: "Prior context/scope.yaml REG-STATE-INSURANCE; candidate-requires-state-specific-review"
+    status: unverified
+    owner: Compliance (review pending)
+regulation_provenance:
+  REG-US-01:
+    prior_id: REG-GLBA
     applicability: candidate-requires-compliance-review
     owner_team: Compliance
-  - id: REG-STATE-INSURANCE
-    name: Applicable state insurance claims and privacy requirements
-    regions: [US]
-    data_classes: [pii, financial]
+  REG-US-02:
+    prior_id: REG-STATE-INSURANCE
     applicability: candidate-requires-state-specific-review
     owner_team: Compliance
 excluded:

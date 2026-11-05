@@ -1,29 +1,32 @@
 schema_version: 1
-organization: shield-insurance
-context_repository: shield-context
+client: shield-insurance
+surfaces: [copilot]
+handoff: copilot-coding-agent
+entry_point: unvetted-idea
+context_repo: amithp-ust/shield-context
+app_repo: amithp-ust/shield-policy-service
 judge:
-  enabled: false
-  model: null
-  rubric:
-    - requirement_traceability
-    - dependency_evidence
-    - contract_consistency
-    - regulated_data_handling
-approved_models: []
+  provider: copilot
+  model: unconfigured
+  version: service-managed
+  cli_version: ""
+  allow_unpinned_model: true
+  allow_mock: false
+model_policy:
+  approved_judges: []
+  approved_session_models: []
+session_models: {}
+copilot:
+  cli_policy_enabled: false
 tool_register:
-  - id: repository-read
-    purpose: Read source, contracts, and context in the seven Shield repositories.
-    approval: approved
-    access: read-only
-  - id: repository-search
-    purpose: Trace callers, dependencies, and ownership in Shield source.
-    approval: approved
-    access: read-only
-  - id: local-validation
-    purpose: Run checked-in validators against synthetic local fixtures.
-    approval: approved
-    access: local-execution
-  - id: publish-spec-pr
-    purpose: Propose coordinated specification changes through pull requests.
-    approval: requires-human-approval
-    access: repository-write
+  - repository-read
+  - repository-search
+  - local-validation
+  - publish-spec-pr
+tool_review:
+  status: unconfirmed
+  terms_and_policies: pending-client-review
+  note: Tool IDs are inventory only, not client approval.
+model_review:
+  status: pending-client-approval
+  pinning_exception: User approved the isolated Copilot design using CLI/model ID without an immutable backend revision; this is not model approval.

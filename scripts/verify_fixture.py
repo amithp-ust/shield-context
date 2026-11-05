@@ -59,6 +59,16 @@ def verify(root):
             portal_db, policy.get_policy, claims.get_claim, billing.premium_schedule
         )
         issued = policy.issue_policy("P-DEMO", "C-DEMO", 35, 100000, 10000)
+        view_schema = contract(root, "shield-policy-service", "shared/policy-risk-view.json")
+        consumer_schema = contract(root, "shield-fraud-scoring", "policy-risk-view.json")
+        require(consumer_schema["$ref"] == view_schema["$id"],
+                "Fraud must link the canonical policy view schema")
+        cursor = policy_db.execute("SELECT * FROM policy_risk_view WHERE policy_id = ?",
+                                   ("P-DEMO",))
+        columns = [column[0] for column in cursor.description]
+        require(columns == view_schema["required"],
+                "Migration view columns differ from the shared contract")
+        check(dict(zip(columns, cursor.fetchone())), view_schema)
         check(issued["policy"], policy_api["components"]["schemas"]["Policy"])
         event_schema = json.loads(
             (root / "shield-policy-service/contracts/events/policy-issued.json").read_text()
