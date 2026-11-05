@@ -31,21 +31,30 @@ the absence of other relationships.
   `regulation_provenance`; both remain `unverified`.
 - `context/standards/`: API, data, security, and naming conventions.
 
-## Publishing specifications
+## Central specification source
 
-Application repositories start with empty `specs/` directories (tracked using
-`.gitkeep`). Publish changes as pull requests rather than silently updating a
-second repository.
+[`amithp-ust/Intent-to-spec`](https://github.com/amithp-ust/Intent-to-spec) is the
+sole canonical authoring, specifications, and requirement-metrics repository,
+declared by `specs_repo` in this profile. The personal namespace simulates the
+client organization; it does not confer client approval. Full Spec Kit,
+authoring agents, gate workflows, and metrics run only in that central repo.
+This context repository remains authoritative for glossary, component map,
+scope, standards, and client policy; the six application repositories retain
+their real implementation and component ownership.
 
-For an intent such as "show why a claim was partly paid on the portal", the
-primary package belongs in
-`shield-claims-service/specs/001-claim-payment-reason/`:
-`spec.md`, `interview.md`, `plan.md`, and `tasks.md`.
-The portal package at
-`shield-customer-portal/specs/001-claim-payment-reason/` contains only the
-portal requirements in `spec.md`, with a link to the primary `spec.md` and the
-source requirement IDs. Both packages retain the same intent ID. This is a
-publishing example, not an already implemented or published feature.
+For an intent such as "show why a claim was partly paid on the portal", keep the
+full `spec.md`, `interview.md`, `plan.md`, and `tasks.md` together in one intent
+package under `amithp-ust/Intent-to-spec/specs/`. Record claims and portal
+requirement/component IDs in that package, not primary-app specs or copied
+secondary slices. This is an example, not an approved or published feature.
+
+Application issues and code PRs must link the approved canonical spec using its
+full immutable commit SHA, exact path, and requirement IDs, with the reviewed
+context revision. Branch URLs are for discovery only, not approval evidence.
+Code PRs require human review; central gate or fixture success does not authorize
+a merge. Empty app `specs/.gitkeep` directories are legacy placeholders, not
+publication targets. Preserve historical content; migrate any existing authoring
+material through a separately reviewed change rather than deleting it blindly.
 
 ## Validation
 
@@ -57,8 +66,9 @@ python scripts/validate.py --repos-root ..
 python scripts/verify_fixture.py --repos-root ..
 ```
 
-CI checks metadata, dependency references, glossary ownership, and profile
-configuration. The optional sibling check also verifies component paths and
+CI checks metadata, dependency references, glossary ownership, the exact
+`amithp-ust/Intent-to-spec` canonical target, real app repository ownership,
+and profile configuration. The optional sibling check also verifies component paths and
 contract files, including OpenAPI and JSON Schema validation. The fixture check
 wires all six components together with synthetic data and checks response shapes
 against contracts. Run each component's unit tests from its own checkout with
@@ -93,11 +103,13 @@ sharing. No service code or specification package is generated.
   operation, and the recorded backend-pinning exception.
 - Confirm tool terms/policies and enable the required Copilot CLI policy only
   after client review; do not treat this inventory as an approval.
-- Bootstrap client workflows only with an explicitly reviewed accelerator
+- Bootstrap authoring, gate, and metrics workflows only in the central
+  `amithp-ust/Intent-to-spec` repo, with an explicitly reviewed accelerator
   `--accelerator-ref` set to a full 40-character commit SHA, not a branch or tag.
   Wait for the reviewed accelerator release commit; no client workflow is
-  installed by these PRs.
-- Before enabling client workflows, set repository variables
+  installed in the context or application repos. Apps use only linked consumer
+  instructions and standard-library unit-test CI, not an authoring installation.
+- Before enabling central client workflows, set central-repository variables
   `I2S_CONTEXT_REPOSITORY` and `I2S_CONTEXT_REF` (the approved context revision),
   and configure secrets `I2S_ACCELERATOR_TOKEN` and `I2S_CONTEXT_TOKEN` with
   least-privilege repository access. Never put token values in this profile,
@@ -118,8 +130,8 @@ sharing. No service code or specification package is generated.
 - [Canonical policy view contract](https://github.com/amithp-ust/shield-policy-service/pull/1)
 - [Fraud consumer contract link](https://github.com/amithp-ust/shield-fraud-scoring/pull/1)
 
-Review the provider and consumer contracts together before the context map change.
-Canonical links on `main` become available only after the corresponding PRs merge;
-the six-sibling fixture resolves the proposed contracts locally without network
-access. Context CI validates metadata and context regression tests, not the
-six-repository fixture; the application repositories currently have no CI checks.
+These compatibility PRs are merged. Review future provider and consumer contract
+changes together; the six-sibling fixture resolves contracts locally without
+network access. Context CI validates metadata and context regression tests, not
+the six-repository fixture. Each application has a minimal Python 3.11 unit-test
+workflow; cross-repository fixture checks still run with all six sibling checkouts.

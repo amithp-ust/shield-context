@@ -11,6 +11,15 @@ from openapi_spec_validator import validate as validate_openapi
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SPECS_REPOSITORY = "amithp-ust/Intent-to-spec"
+COMPONENT_REPOSITORIES = {
+    "CM-POLICY": "shield-policy-service",
+    "CM-UW-RULES": "shield-underwriting-rules",
+    "CM-CLAIMS": "shield-claims-service",
+    "CM-FRAUD": "shield-fraud-scoring",
+    "CM-BILLING": "shield-billing-service",
+    "CM-PORTAL": "shield-customer-portal",
+}
 
 
 def require(condition, message):
@@ -56,6 +65,8 @@ def validate(repos_root=None, schemas_root=None):
     unique_ids(scope["regulations"], "regulations")
     require(len(components) == 6, "Expected six components")
     require(len({c["repo"] for c in components}) == 6, "Expected six distinct repos")
+    require({c["id"]: c["repo"] for c in components} == COMPONENT_REPOSITORIES,
+            "Component ownership must remain in the six Shield application repos")
     require(
         {c["application"] for c in components}
         == {"policy-admin", "claims", "billing-customer"},
@@ -153,6 +164,10 @@ def validate(repos_root=None, schemas_root=None):
         require(bool(regulation.get("owner")) and bool(regulation.get("source")),
                 "Regulation needs owner and provenance")
     require(bool(profile.get("client")), "Missing profile client")
+    require(profile.get("specs_repo") == SPECS_REPOSITORY,
+            f"specs_repo must be the canonical repository {SPECS_REPOSITORY}")
+    require(profile.get("context_repo") == "amithp-ust/shield-context",
+            "context_repo must remain amithp-ust/shield-context")
     require(bool(profile.get("surfaces")) and
             set(profile["surfaces"]) <= {"copilot", "claude-code", "kiro"},
             "Invalid profile surfaces")
@@ -188,7 +203,7 @@ def validate(repos_root=None, schemas_root=None):
     for standard in ("api", "data", "security", "naming"):
         require((ROOT / "context" / "standards" / f"{standard}.md").is_file(),
                 f"Missing {standard} standard")
-    print("Shield context valid: 3 applications, 6 components, 1 context repository")
+    print(f"Shield context valid: 3 applications, 6 components, specs in {SPECS_REPOSITORY}")
 
 
 if __name__ == "__main__":

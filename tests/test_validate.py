@@ -46,6 +46,37 @@ class ContextTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     self.check()
 
+    def test_canonical_specs_repository_is_declared(self):
+        self.check()
+        profile = self.documents["i2s.profile.yaml"]
+        self.assertEqual(profile["specs_repo"], "amithp-ust/Intent-to-spec")
+        self.assertEqual(profile["context_repo"], "amithp-ust/shield-context")
+        self.assertNotIn("app_repo", profile)
+
+    def test_rejects_missing_or_noncanonical_specs_repository(self):
+        profile = self.documents["i2s.profile.yaml"]
+        profile.pop("specs_repo")
+        with self.assertRaisesRegex(ValueError, "specs_repo must be"):
+            self.check()
+        for repository in (
+            "", None, "Intent-to-spec", "other/Intent-to-spec",
+            "amithp-ust/shield-policy-service", "amithp-ust/shield-context",
+        ):
+            with self.subTest(repository=repository):
+                profile["specs_repo"] = repository
+                with self.assertRaisesRegex(ValueError, "specs_repo must be"):
+                    self.check()
+
+    def test_rejects_replacing_context_source(self):
+        self.documents["i2s.profile.yaml"]["context_repo"] = "amithp-ust/Intent-to-spec"
+        with self.assertRaisesRegex(ValueError, "context_repo must remain"):
+            self.check()
+
+    def test_rejects_moving_component_ownership_to_specs_repository(self):
+        self.documents["context/component-map.yaml"]["components"][0]["repo"] = "Intent-to-spec"
+        with self.assertRaisesRegex(ValueError, "Component ownership must remain"):
+            self.check()
+
     def test_rejects_missing_fraud_dependency(self):
         fraud = next(c for c in self.documents["context/component-map.yaml"]["components"]
                      if c["id"] == "CM-FRAUD")
