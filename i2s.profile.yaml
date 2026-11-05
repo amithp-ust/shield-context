@@ -4,7 +4,7 @@ surfaces: [copilot]
 handoff: copilot-coding-agent
 entry_point: unvetted-idea
 context_repo: amithp-ust/shield-context
-app_repo: amithp-ust/shield-policy-service
+specs_repo: amithp-ust/Intent-to-spec
 judge:
   provider: copilot
   model: unconfigured
