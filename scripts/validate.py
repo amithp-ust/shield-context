@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import re
 from pathlib import Path
 
 import yaml
@@ -31,16 +32,28 @@ def unique_ids(entries, label):
     return set(values)
 
 
-def validate(repos_root=None):
+def validate(repos_root=None, schemas_root=None):
     components = load("context/component-map.yaml")["components"]
     terms = load("context/glossary.yaml")["terms"]
     scope = load("context/scope.yaml")
     profile = load("i2s.profile.yaml")
+    if schemas_root is not None:
+        for filename, document in (
+            ("component-map", {"components": components}),
+            ("glossary", {"terms": terms}),
+            ("scope", scope),
+            ("profile", profile),
+        ):
+            schema = json.loads((schemas_root / f"{filename}.schema.json").read_text())
+            Draft202012Validator.check_schema(schema)
+            Draft202012Validator(schema).validate(document)
     component_ids = unique_ids(components, "components")
     term_ids = unique_ids(terms, "glossary")
     regions = unique_ids(scope["regions"], "regions")
     data_classes = unique_ids(scope["data_classes"], "data classes")
-    unique_ids(scope["regulation_register"], "regulations")
+    require(set(scope["regulated_data_classes"]) <= data_classes,
+            "Unknown regulated data class")
+    unique_ids(scope["regulations"], "regulations")
     require(len(components) == 6, "Expected six components")
     require(len({c["repo"] for c in components}) == 6, "Expected six distinct repos")
     require(
@@ -51,7 +64,9 @@ def validate(repos_root=None):
     owned = set()
     for component in components:
         name = component["id"]
-        for field in ("paths", "contracts", "data_classes", "regions", "owner_team"):
+        require(re.fullmatch(r"CM-[A-Z0-9]+(?:-[A-Z0-9]+)*", name),
+                f"{name}: invalid component ID")
+        for field in ("name", "paths", "contracts", "data_classes", "regions", "owner_team"):
             require(bool(component[field]), f"{name}: missing {field}")
         dependencies = component["depends_on"]
         require(set(dependencies) <= component_ids, f"{name}: unknown dependency")
@@ -86,6 +101,15 @@ def validate(repos_root=None):
                         require(bool(contract.get("paths")), f"{target}: no API paths")
                         validate_openapi(contract, base_uri=target.resolve().as_uri())
     require(owned == term_ids, "Every glossary term needs an owner")
+    for term in terms:
+        require(re.fullmatch(r"GL-\d{4}", term["id"]), "Invalid glossary ID")
+        for field in ("term", "definition", "owner"):
+            require(bool(term.get(field)), f"{term['id']}: missing {field}")
+        require(term.get("status") in {"draft", "approved", "deprecated"},
+                f"{term['id']}: invalid status")
+        owner = next(c["owner_team"] for c in components if term["id"] in c["owns"])
+        require(term["owner"] == owner or term["owner"].startswith("Pending:"),
+                f"{term['id']}: glossary owner differs from component owner")
     visiting, visited = set(), set()
     by_id = {component["id"]: component for component in components}
 
@@ -101,21 +125,66 @@ def validate(repos_root=None):
 
     for name in component_ids:
         visit(name)
-    for regulation in scope["regulation_register"]:
-        require(set(regulation["regions"]) <= regions, "Unknown regulation region")
+    require("CM-POLICY" in by_id["CM-FRAUD"]["depends_on"],
+            "CM-FRAUD must declare its CM-POLICY SQL-view dependency")
+    require("contracts/shared/policy-risk-view.json" in by_id["CM-POLICY"]["contracts"],
+            "CM-POLICY must publish the shared view contract")
+    require("contracts/policy-risk-view.json" in by_id["CM-FRAUD"]["contracts"],
+            "CM-FRAUD must link the shared view contract")
+    if repos_root is not None:
+        provider = json.loads(
+            (repos_root / by_id["CM-POLICY"]["repo"]
+             / "contracts/shared/policy-risk-view.json").read_text()
+        )
+        consumer = json.loads(
+            (repos_root / by_id["CM-FRAUD"]["repo"]
+             / "contracts/policy-risk-view.json").read_text()
+        )
+        require(consumer.get("$ref") == provider.get("$id") and bool(provider.get("$id")),
+                "Fraud shared-view link must reference the canonical policy schema")
+    for regulation in scope["regulations"]:
+        require(re.fullmatch(r"REG-[A-Z]{2}-\d{2}", regulation["id"]),
+                "Invalid regulation ID")
+        require(regulation["region"] in regions, "Unknown regulation region")
         require(set(regulation["data_classes"]) <= data_classes,
                 "Unknown regulation data class")
-    approved = profile["approved_models"]
-    require(len(approved) == len(set(approved)), "Duplicate approved models")
+        require(regulation.get("status") in {"unverified", "verified"},
+                "Invalid regulation status")
+        require(bool(regulation.get("owner")) and bool(regulation.get("source")),
+                "Regulation needs owner and provenance")
+    require(bool(profile.get("client")), "Missing profile client")
+    require(bool(profile.get("surfaces")) and
+            set(profile["surfaces"]) <= {"copilot", "claude-code", "kiro"},
+            "Invalid profile surfaces")
+    require(profile.get("handoff") in {"copilot-coding-agent", "claude-code", "kiro"},
+            "Invalid profile handoff")
+    approved = profile["model_policy"]["approved_judges"]
+    approved_pairs = [(entry["provider"], entry["model"]) for entry in approved]
+    require(len(approved_pairs) == len(set(approved_pairs)), "Duplicate approved judges")
+    session_approved = profile["model_policy"]["approved_session_models"]
+    require(len(session_approved) == len(set(session_approved)),
+            "Duplicate approved session models")
     judge = profile["judge"]
-    require(not judge["enabled"] or judge["model"] in approved,
-            "Enabled judge must use an approved model")
-    require(judge["model"] is None or judge["model"] in approved,
+    for field in ("provider", "model", "version"):
+        require(isinstance(judge.get(field), str) and bool(judge[field]),
+                f"Judge needs {field}")
+    require(judge.get("allow_mock") is False, "Shield must not enable mock judging")
+    require(judge["model"] == "unconfigured" or
+            (judge["provider"], judge["model"]) in approved_pairs,
             "Configured judge model must be approved")
-    unique_ids(profile["tool_register"], "tools")
-    for tool in profile["tool_register"]:
-        require(tool["approval"] in {"approved", "requires-human-approval", "denied"},
-                f"{tool['id']}: unknown approval state")
+    if judge["provider"] == "copilot":
+        require(judge["version"] == "service-managed",
+                "Copilot backend version must not be a CLI version")
+        require(judge.get("allow_unpinned_model") is True,
+                "Copilot needs the explicit model-version-pinning exception")
+        require(isinstance(judge.get("cli_version"), str),
+                "Copilot CLI version must be separately recorded")
+    require(set(profile.get("session_models", {}).values()) <= set(session_approved),
+            "Session models must be approved")
+    tools = profile["tool_register"]
+    require(all(isinstance(tool, str) and tool for tool in tools),
+            "Tool register must contain string IDs")
+    require(len(tools) == len(set(tools)), "Duplicate tools")
     for standard in ("api", "data", "security", "naming"):
         require((ROOT / "context" / "standards" / f"{standard}.md").is_file(),
                 f"Missing {standard} standard")
@@ -125,5 +194,7 @@ def validate(repos_root=None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repos-root", type=Path)
+    parser.add_argument("--schemas-root", type=Path,
+                        help="Accelerator src/i2s/schemas directory")
     args = parser.parse_args()
-    validate(args.repos_root)
+    validate(args.repos_root, args.schemas_root)

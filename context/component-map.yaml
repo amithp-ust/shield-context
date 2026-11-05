@@ -1,16 +1,18 @@
 schema_version: 1
 components:
   - id: CM-POLICY
+    name: Shield policy service
     application: policy-admin
     repo: shield-policy-service
     paths: [src/policy/, db/migrations/]
-    contracts: [contracts/policy-api.yaml, contracts/events/policy-issued.json]
+    contracts: [contracts/policy-api.yaml, contracts/events/policy-issued.json, contracts/shared/policy-risk-view.json]
     data_classes: [pii]
     regions: [US]
     depends_on: [CM-UW-RULES]
     owns: [GL-0001, GL-0003, GL-0004, GL-0006]
     owner_team: Policy platform
   - id: CM-UW-RULES
+    name: Shield underwriting rules
     application: policy-admin
     repo: shield-underwriting-rules
     paths: [src/underwriting/]
@@ -21,6 +23,7 @@ components:
     owns: []
     owner_team: Policy platform
   - id: CM-CLAIMS
+    name: Shield claims service
     application: claims
     repo: shield-claims-service
     paths: [src/claims/]
@@ -31,16 +34,18 @@ components:
     owns: [GL-0002, GL-0008]
     owner_team: Claims platform
   - id: CM-FRAUD
+    name: Shield fraud scoring
     application: claims
     repo: shield-fraud-scoring
     paths: [src/fraud/]
-    contracts: [contracts/fraud-api.yaml]
+    contracts: [contracts/fraud-api.yaml, contracts/policy-risk-view.json]
     data_classes: [pii]
     regions: [US]
-    depends_on: []
+    depends_on: [CM-POLICY]
     owns: [GL-0007]
     owner_team: Claims platform
   - id: CM-BILLING
+    name: Shield billing service
     application: billing-customer
     repo: shield-billing-service
     paths: [src/billing/]
@@ -51,6 +56,7 @@ components:
     owns: [GL-0005]
     owner_team: Billing platform
   - id: CM-PORTAL
+    name: Shield customer portal
     application: billing-customer
     repo: shield-customer-portal
     paths: [src/portal/]
