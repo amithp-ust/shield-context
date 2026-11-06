@@ -25,13 +25,27 @@ class ContextTests(unittest.TestCase):
                 validate.validate()
 
     def test_unconfigured_profile_is_valid_metadata_not_model_approval(self):
-        self.check()
         profile = self.documents["i2s.profile.yaml"]
+        profile["judge"].update(model="unconfigured", cli_version="")
+        profile["model_policy"].update(approved_judges=[], approved_session_models=[])
+        profile["session_models"] = {}
+        profile["tool_review"]["status"] = "unconfirmed"
+        self.check()
         self.assertEqual(profile["judge"]["model"], "unconfigured")
         self.assertEqual(profile["judge"]["cli_version"], "")
         self.assertEqual(profile["model_policy"]["approved_judges"], [])
         self.assertEqual(profile["model_policy"]["approved_session_models"], [])
         self.assertEqual(profile["tool_review"]["status"], "unconfirmed")
+
+    def test_configured_approved_profile_is_valid_metadata(self):
+        profile = self.documents["i2s.profile.yaml"]
+        profile["judge"].update(model="approved-demo-model", cli_version="1.0.105")
+        profile["model_policy"].update(
+            approved_judges=[{"provider": "copilot", "model": "approved-demo-model"}],
+            approved_session_models=["approved-demo-model"],
+        )
+        profile["session_models"] = {"copilot": "approved-demo-model"}
+        self.check()
 
     def test_rejects_missing_names_owners_and_status(self):
         original = copy.deepcopy(self.documents)

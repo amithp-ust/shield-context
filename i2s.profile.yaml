@@ -7,26 +7,32 @@ context_repo: amithp-ust/shield-context
 specs_repo: amithp-ust/Intent-to-spec
 judge:
   provider: copilot
-  model: unconfigured
+  model: claude-sonnet-5.5
   version: service-managed
-  cli_version: ""
+  cli_version: "1.0.105"
   allow_unpinned_model: true
   allow_mock: false
+  credentials: client-issued
 model_policy:
-  approved_judges: []
-  approved_session_models: []
-session_models: {}
+  approved_judges:
+    - provider: copilot
+      model: claude-sonnet-5.5
+  approved_session_models: [claude-sonnet-5.5]
+session_models:
+  copilot: claude-sonnet-5.5
 copilot:
-  cli_policy_enabled: false
+  cli_policy_enabled: true
 tool_register:
+  - copilot
   - repository-read
   - repository-search
   - local-validation
   - publish-spec-pr
 tool_review:
-  status: unconfirmed
-  terms_and_policies: pending-client-review
-  note: Tool IDs are inventory only, not client approval.
+  status: approved-for-synthetic-demo
+  terms_and_policies: demo-operator-approved
+  note: Local Copilot CLI/tool use approved on 2026-11-06. This personal-namespace demo does not prove production organization-policy enforcement.
 model_review:
-  status: pending-client-approval
+  status: approved-for-synthetic-demo
+  note: Sonnet 5.5 approved for interview and isolated judge on 2026-11-06. Official Copilot CLI login and the isolated stdin/token live canary succeeded with the demo account. Recheck with doctor --live-judge on each environment; this is not production approval.
   pinning_exception: User approved the isolated Copilot design using CLI/model ID without an immutable backend revision; this is not model approval.
