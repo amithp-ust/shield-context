@@ -15,14 +15,17 @@ the absence of other relationships.
 ## Context
 
 - `i2s.profile.yaml`: accelerator-compatible Copilot surface and handoff configuration.
-  Model IDs, exact client CLI version, and approval lists are deliberately
-  unconfigured. Metadata validation passes; accelerator `doctor` must REFUSE
-  model execution until client setup and approvals are complete. No mock judge
-  or approved model is supplied. `version: service-managed` describes the backend,
+  The demo operator approved `claude-sonnet-5.5` for the interview and isolated judge,
+  with local Copilot CLI `1.0.105`. This approval is limited to synthetic demo data;
+  local CLI login and the isolated judge live canary succeeded on 2026-11-06.
+  Repeat `doctor --live-judge` on each session environment.
+  Metadata validation does not prove a working judge. Accelerator `doctor` must REFUSE
+  model execution if client authentication or CLI/tool setup fails. No mock judge
+  is enabled. `version: service-managed` describes the backend,
   not the CLI. `allow_unpinned_model: true` records only the user-approved isolated
   Copilot design exception (model ID/CLI pinning without an immutable backend
-  revision); it does not approve any client model. Tool IDs are inventory only:
-  client tool terms and policies remain unconfirmed.
+  revision); it does not approve additional client models. Local CLI/tool use is approved only
+  for this synthetic demo; production organization policies and terms need a separate review.
 - `context/glossary.yaml`: shared domain identifiers and definitions.
   Accountable owners come from the component map; all terms remain drafts.
 - `context/scope.yaml`: regions, data classes, and candidate regulations requiring
@@ -101,11 +104,14 @@ sharing. No service code or specification package is generated.
   record the exact installed official Copilot CLI version in `judge.cli_version`.
   Confirm client-issued credentials (without committing secrets), isolated judge
   operation, and the recorded backend-pinning exception.
+  The synthetic Sonnet/demo CLI approval and successful local canary are recorded. Each new
+  environment still needs its own authenticated live check.
 - Confirm tool terms/policies and enable the required Copilot CLI policy only
   after client review; do not treat this inventory as an approval.
 - Bootstrap authoring, gate, and metrics workflows only in the central
   `amithp-ust/Intent-to-spec` repo, with an explicitly reviewed accelerator
-  `--accelerator-ref` set to a full 40-character commit SHA, not a branch or tag.
+  `--accelerator-ref` set to a full 40-character commit SHA, not a branch or tag,
+  or use an approved committed vendor copy and `--vendored` in a private specs repository.
   Wait for the reviewed accelerator release commit; no client workflow is
   installed in the context or application repos. Apps use only linked consumer
   instructions and standard-library unit-test CI, not an authoring installation.
@@ -114,6 +120,8 @@ sharing. No service code or specification package is generated.
   and configure secrets `I2S_ACCELERATOR_TOKEN` and `I2S_CONTEXT_TOKEN` with
   least-privilege repository access. Never put token values in this profile,
   documentation, or specifications.
+  The vendored private demo needs no accelerator secret; public Shield context/apps can use
+  the workflow's `github.token` fallback. Do not make the vendored specs repository public.
 - Use `gate status --require-build-ready` for production readiness: it rejects
   mock judging, absent application source, unassessed dependencies, and deferred
   regions. Passing the synthetic fixture or metadata validation is not a
