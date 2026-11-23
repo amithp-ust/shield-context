@@ -31,7 +31,7 @@ components:
     data_classes: [pii, financial]
     regions: [US]
     depends_on: [CM-POLICY, CM-FRAUD, CM-BILLING]
-    owns: [GL-0002, GL-0008]
+    owns: [GL-0002, GL-0008, GL-0009]
     owner_team: Claims platform
   - id: CM-FRAUD
     name: Shield fraud scoring
