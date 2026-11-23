@@ -15,24 +15,24 @@ regulations:
     name: Gramm-Leach-Bliley Act
     region: US
     data_classes: [pii, financial]
-    source: "Prior context/scope.yaml REG-GLBA; candidate-requires-compliance-review"
-    status: unverified
-    owner: Compliance (review pending)
+    source: "Applicability confirmed by the register approver (owner-stated sign-off authority, 2026-11-23; supporting evidence confidential and not recorded here). Non-sensitive sources: 15 U.S.C. 6802, 6805(a)(6), 6809 (https://www.law.cornell.edu/uscode/text/15/6802). Scope: claim-explanation change in specs/001-claim-settlement-explanation. Not a compliance certification."
+    status: verified
+    owner: Compliance (approver decision recorded 2026-11-23)
   - id: REG-US-02
     name: Applicable state insurance claims and privacy requirements
     region: US
     data_classes: [pii, financial]
-    source: "Prior context/scope.yaml REG-STATE-INSURANCE; candidate-requires-state-specific-review"
-    status: unverified
-    owner: Compliance (review pending)
+    source: "Applicability and portal-only denial notices as sufficient for this scope confirmed by the register approver (owner-stated sign-off authority, 2026-11-23; supporting evidence confidential and not recorded here). Scope: California homeowners insurance. Non-sensitive sources: 10 CCR 2695.7; Cal. Ins. Code 790.03(h) and 791.13; Cal. Fin. Code 4051, 4052, 4052.5, 4056. Sections not read by the author: Fin. Code 4053, 4053.5, 4054, 4054.6; Ins. Code 791 beyond 791.13. Not a compliance certification."
+    status: verified
+    owner: Compliance (approver decision recorded 2026-11-23)
 regulation_provenance:
   REG-US-01:
     prior_id: REG-GLBA
-    applicability: candidate-requires-compliance-review
+    applicability: confirmed-by-approver
     owner_team: Compliance
   REG-US-02:
     prior_id: REG-STATE-INSURANCE
-    applicability: candidate-requires-state-specific-review
+    applicability: confirmed-by-approver
     owner_team: Compliance
 excluded:
   - Production deployment and real customer data
