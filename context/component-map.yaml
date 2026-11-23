@@ -31,7 +31,7 @@ components:
     data_classes: [pii, financial]
     regions: [US]
     depends_on: [CM-POLICY, CM-FRAUD, CM-BILLING]
-    owns: [GL-0002, GL-0008]
+    owns: [GL-0002, GL-0008, GL-0009]
     owner_team: Claims platform
   - id: CM-FRAUD
     name: Shield fraud scoring
@@ -66,3 +66,6 @@ components:
     depends_on: [CM-POLICY, CM-CLAIMS, CM-BILLING]
     owns: []
     owner_team: Customer experience
+    # Replicated data (proposed): claim_status cache in src/portal/schema.sql holds claim_id, policy_id,
+    # status and paid_cents copied from CM-CLAIMS; the claim explanation is added to this copy and refreshed
+    # together with status and amounts each time a claim is opened. Reviewer: domain architect.
