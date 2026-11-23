@@ -40,3 +40,8 @@ terms:
     status: draft
     term: Claim status
     definition: The current processing state of a claim owned by the claims service.
+  - id: GL-0009
+    owner: Claims platform
+    status: draft
+    term: Claim explanation
+    definition: The customer-facing reason for the claim's current outcome.
