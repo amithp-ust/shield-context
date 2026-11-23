@@ -103,13 +103,25 @@ class ContextTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "must be approved"):
             self.check()
 
-    def test_regulations_remain_unverified_with_provenance(self):
+    def test_regulations_keep_provenance_after_review(self):
         scope = self.documents["context/scope.yaml"]
         self.check()
         for regulation in scope["regulations"]:
-            self.assertEqual(regulation["status"], "unverified")
-            self.assertIn("candidate", regulation["source"])
             self.assertIn("prior_id", scope["regulation_provenance"][regulation["id"]])
+
+    def test_regulations_require_valid_status_owner_and_source(self):
+        regulation = self.documents["context/scope.yaml"]["regulations"][0]
+        for field, invalid, message in (
+            ("status", "pending", "Invalid regulation status"),
+            ("owner", "", "Regulation needs owner and provenance"),
+            ("source", "", "Regulation needs owner and provenance"),
+        ):
+            with self.subTest(field=field):
+                original = regulation[field]
+                regulation[field] = invalid
+                with self.assertRaisesRegex(ValueError, message):
+                    self.check()
+                regulation[field] = original
 
     def test_rejects_cli_version_as_backend_version(self):
         self.documents["i2s.profile.yaml"]["judge"]["version"] = "1.2.3"
